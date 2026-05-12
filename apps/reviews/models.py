@@ -4,7 +4,7 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
-
+from django.core.validators import MinLengthValidator
 
 class Review(models.Model):
     """
@@ -27,7 +27,7 @@ class Review(models.Model):
     rating     = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)]
     )
-    comment    = models.TextField(min_length=20, max_length=1000, blank=True)
+    comment    = models.TextField( max_length=1000, blank=True,validators=[MinLengthValidator(20)])
 
     # Critères détaillés (optionnels)
     quality_rating       = models.PositiveSmallIntegerField(null=True, blank=True,
