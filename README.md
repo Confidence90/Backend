@@ -47,7 +47,7 @@ git clone https://github.com/Confidence90/Backend.git
 cd Backend
 
 # 2. Variables d'environnement
-cp .env.example .env
+copy .env.example .env
 # Éditer .env avec vos valeurs
 
 # 3. Lancer avec Docker
