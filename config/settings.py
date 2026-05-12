@@ -18,7 +18,7 @@ THIRD_PARTY_APPS = [
     'corsheaders','django_filters','drf_spectacular','django_celery_beat','storages',
 ]
 LOCAL_APPS = [
-    'apps.users','apps.profiles','apps.services','apps.jobs',
+    'apps.users','apps.profiles','apps.jobs',
     'apps.reviews','apps.payments','apps.notifications','apps.matching',
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
