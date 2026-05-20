@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.g.dart
+*.freezed.dart
+=======
 # Python
 __pycache__/
 *.py[cod]
@@ -20,10 +30,38 @@ staticfiles/
 venv/
 env/
 .venv/
+>>>>>>> origin/main
 
 # IDE
 .idea/
 .vscode/
+<<<<<<< HEAD
+*.iml
+
+# Android
+android/.gradle/
+android/key.properties
+**/android/app/google-services.json
+**/android/app/src/main/res/
+
+# iOS
+ios/.symlinks/
+ios/Pods/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+**/*.xcworkspace
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Generated files
+pubspec.lock
+
+# Environment
+.env
+*.env.local
+.envrc
+=======
 *.swp
 *.swo
 .DS_Store
@@ -41,3 +79,4 @@ htmlcov/
 
 # Pytest
 .pytest_cache/
+>>>>>>> origin/main
