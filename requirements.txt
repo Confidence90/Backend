@@ -1,0 +1,35 @@
+# Core Django
+Django==4.2.11
+djangorestframework==3.15.1
+django-cors-headers==4.3.1
+django-filter==24.2
+
+# Auth JWT
+djangorestframework-simplejwt==5.3.1
+
+# Database
+psycopg2-binary==2.9.9
+python-decouple==3.8
+
+# Cache & Queue
+celery==5.3.6
+redis==5.0.3
+django-redis==5.4.0
+django-celery-beat==2.6.0
+
+# API Docs
+drf-spectacular==0.27.2
+
+# Storage & Media
+Pillow==10.3.0
+
+# SMS
+phonenumbers==8.13.35
+
+# Production server
+gunicorn==22.0.0
+
+# Utils
+django-extensions==3.2.3
+django-storages==1.13.2
+boto3==1.28.57

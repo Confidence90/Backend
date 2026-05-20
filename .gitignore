@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Flutter/Dart
 .dart_tool/
 .packages
@@ -6,10 +7,35 @@
 build/
 *.g.dart
 *.freezed.dart
+=======
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+
+# Environment
+.env
+.env.local
+.env.production
+venv/
+env/
+.venv/
+>>>>>>> origin/main
 
 # IDE
 .idea/
 .vscode/
+<<<<<<< HEAD
 *.iml
 
 # Android
@@ -35,3 +61,22 @@ pubspec.lock
 .env
 *.env.local
 .envrc
+=======
+*.swp
+*.swo
+.DS_Store
+
+# Docker
+*.override.yml
+
+# Logs
+logs/
+*.log
+
+# Coverage
+.coverage
+htmlcov/
+
+# Pytest
+.pytest_cache/
+>>>>>>> origin/main
