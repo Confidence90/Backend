@@ -1,0 +1,37 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+*.g.dart
+*.freezed.dart
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Android
+android/.gradle/
+android/key.properties
+**/android/app/google-services.json
+**/android/app/src/main/res/
+
+# iOS
+ios/.symlinks/
+ios/Pods/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+**/*.xcworkspace
+
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Generated files
+pubspec.lock
+
+# Environment
+.env
+*.env.local
+.envrc
