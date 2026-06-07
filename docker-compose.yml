@@ -11,7 +11,7 @@ services:
       - "5432:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-baaralink_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-baaralink_user} -d ${DB_NAME:-baaralink_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,12 +70,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    command: >
+      sh -c "python manage.py migrate django_celery_beat --noinput &&
+             celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
     volumes:
       - .:/app
     env_file:
       - .env
     depends_on:
+      api:
+        condition: service_started   # ← attend que api démarre
       db:
         condition: service_healthy
       redis:
