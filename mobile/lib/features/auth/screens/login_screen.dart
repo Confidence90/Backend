@@ -27,23 +27,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _usePhone = true;
-  late AnimationController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 250),
-    );
-  }
 
   @override
   void dispose() {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -51,30 +40,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final phone = _phoneController.text.trim();
     if (phone.length < AppConstants.phoneMinLength) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Numéro de téléphone invalide')),
+        const SnackBar(content: Text('Numéro de téléphone invalide')),
       );
       return;
     }
-    await ref.read(authProvider.notifier).requestOtp(
+    
+    final success = await ref.read(authProvider.notifier).requestOtp(
           '${AppConstants.phonePrefix}$phone',
         );
-    if (mounted) {
+        
+    if (success && mounted) {
       context.push(
         '${AppRoutes.otp}?phone=${AppConstants.phonePrefix}$phone',
       );
     }
   }
 
-  /*Future<void> _loginWithEmail() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    final success = await ref.read(authProvider.notifier).loginWithEmail(
-          _emailController.text.trim(),
-          _passwordController.text,
-        );
-    if (success && mounted) {
-      context.go(AppRoutes.clientDashboard);
-    }
-  }*/
   Future<void> _loginWithEmail() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -86,21 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!mounted) return;
 
     if (success) {
-      context.go(AppRoutes.clientDashboard); // OU providerDashboard
-    }
-  }
-
-  Future<void> _verifyOtp() async {
-    final phone = _phoneController.text.trim();
-    final otp = _passwordController.text.trim();
-    final success = await ref
-        .read(authProvider.notifier)
-        .verifyOtp('${AppConstants.phonePrefix}$phone', otp);
-
-    if (!mounted) return;
-
-    if (success) {
-      context.go(AppRoutes.clientDashboard);
+      // Le router redirigera automatiquement grâce au redirect guard
     }
   }
 
@@ -124,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                 // Back
                 GestureDetector(
-                  onTap: () => context.pop(),
+                  onTap: () => context.canPop() ? context.pop() : context.go(AppRoutes.onboarding),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -162,13 +129,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         label: 'Téléphone / OTP',
                         icon: Icons.phone_android_rounded,
                         selected: _usePhone,
-                        onTap: () => setState(() => _usePhone = true),
+                        onTap: () {
+                          ref.read(authProvider.notifier).clearError();
+                          setState(() => _usePhone = true);
+                        },
                       ),
                       _LoginTab(
                         label: 'Email',
                         icon: Icons.email_outlined,
                         selected: !_usePhone,
-                        onTap: () => setState(() => _usePhone = false),
+                        onTap: () {
+                          ref.read(authProvider.notifier).clearError();
+                          setState(() => _usePhone = false);
+                        },
                       ),
                     ],
                   ),
@@ -189,7 +162,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      // Country prefix
                       Container(
                         height: 56,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -220,6 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly
                           ],
+                          onChanged: (_) => ref.read(authProvider.notifier).clearError(),
                           style: AppTypography.bodyMedium,
                           decoration: InputDecoration(
                             hintText: 'XX XX XX XX',
@@ -264,7 +237,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         color: Colors.white, size: 18),
                   ),
                 ]
-                // Email flow
                 else ...[
                   AppTextField(
                     label: 'Email',
@@ -273,6 +245,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.email],
+                    onChanged: (_) => ref.read(authProvider.notifier).clearError(),
                     validator: (v) =>
                         v?.contains('@') == true ? null : 'Email invalide',
                   ),
@@ -284,6 +257,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     obscureText: true,
                     textInputAction: TextInputAction.done,
                     autofillHints: const [AutofillHints.password],
+                    onChanged: (_) => ref.read(authProvider.notifier).clearError(),
                     validator: (v) => (v?.length ?? 0) >=
                             AppConstants.minPasswordLength
                         ? null
@@ -310,7 +284,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ],
 
-                // Divider
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
                   child: Row(
@@ -328,7 +301,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
 
-                // Register CTA
                 Center(
                   child: RichText(
                     text: TextSpan(
@@ -338,7 +310,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       children: [
                         WidgetSpan(
                           child: GestureDetector(
-                            onTap: () {},
+                            onTap: () => context.push(AppRoutes.roleSelect),
                             child: Text('Créer un compte',
                                 style: AppTypography.bodySmall.copyWith(
                                     color: AppColors.primary,

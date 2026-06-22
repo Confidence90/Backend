@@ -26,13 +26,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
   final _fcfa = NumberFormat('#,###', 'fr_FR');
   bool _balanceVisible = true;
 
-  final _txGroups = [
+  late final _txGroups = [
     (
       'Aujourd\'hui',
       [
         MockData.recentTransactions[0],
         const Transaction(
           id: 'tx-004',
+          title: 'Paiement Escrow',
           type: TransactionType.escrow,
           amount: 43000,
           description: 'Paiement en escrow',

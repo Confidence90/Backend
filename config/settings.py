@@ -7,7 +7,7 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,10.0.2.2', cast=Csv())
 
 DJANGO_APPS = [
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
@@ -139,6 +139,35 @@ PACK_BASIC_PRICE = 4950
 PACK_PREMIUM_PRICE = 6950
 PACK_BASIC_PROFILES = 4
 PACK_PREMIUM_PROFILES = 9
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {'format': '[{levelname}] {name} — {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO' if DEBUG else 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO' if DEBUG else 'WARNING',
+            'propagate': False,
+        },
+     'apps.users': {
+        'handlers': ['console'],
+        'level': 'INFO',
+        'propagate': False,
+    },
+    },
+}
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'BaaraLink API',

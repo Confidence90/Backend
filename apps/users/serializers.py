@@ -1,4 +1,5 @@
 """BaaraLink – Users Serializers"""
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -83,8 +84,11 @@ class VerifyOTPSerializer(serializers.Serializer):
 
         otp.increment_attempts()
 
-        if not otp.is_valid():
-            raise serializers.ValidationError("OTP expiré ou trop de tentatives.")
+        if otp.expires_at <= timezone.now():
+            raise serializers.ValidationError("Code expiré, demande un nouveau code.")
+
+        if otp.attempts >= 5:
+            raise serializers.ValidationError("Trop de tentatives, demande un nouveau code.")
 
         if otp.code != code:
             raise serializers.ValidationError("Code incorrect.")

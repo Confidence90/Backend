@@ -1,6 +1,4 @@
-// Manual model classes — identical API to the @freezed versions
-// Used for development without running build_runner
-// Replace with generated .freezed.dart files for production
+// BaaraLink Core Models & Mock Data
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Enums
@@ -88,27 +86,178 @@ class User {
     createdAt: createdAt ?? this.createdAt,
   );
 
-  factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id'] as String,
-    name: json['name'] as String? ?? json['full_name'] as String? ?? '',
-    phone: json['phone'] as String? ?? '',
-    email: json['email'] as String?,
-    avatarUrl: json['avatar_url'] as String?,
-    role: UserRole.values.firstWhere(
-      (r) => r.name == (json['role'] as String?),
-      orElse: () => UserRole.client,
-    ),
-    isVerified: json['is_verified'] as bool? ?? false,
-    rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-    reviewCount: json['review_count'] as int? ?? 0,
-    completedMissions: json['completed_missions'] as int? ?? 0,
-    trustScore: (json['trust_score'] as num?)?.toDouble() ?? 0.0,
-    location: json['location'] as String?,
-    specialty: json['specialty'] as String?,
-    isPremium: json['is_premium'] as bool? ?? false,
-    isCertified: json['is_certified'] as bool? ?? false,
-    certificationBadge: json['certification_badge'] as String?,
+  factory User.fromJson(Map<String, dynamic> json) {
+    final rawRole = (json['role'] as String?)?.toLowerCase();
+    return User(
+      id: json['id']?.toString() ?? '',
+      name: json['full_name'] as String? ?? json['name'] as String? ?? '',
+      phone: json['phone_number'] as String? ?? json['phone'] as String? ?? '',
+      email: json['email'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
+      role: UserRole.values.firstWhere(
+        (r) => r.name == rawRole,
+        orElse: () => UserRole.client,
+      ),
+      isVerified: json['is_active'] as bool? ?? false,
+      isPhoneVerified: json['phone_verified'] as bool? ?? false,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: json['review_count'] as int? ?? 0,
+      completedMissions: json['completed_missions'] as int? ?? 0,
+      trustScore: (json['trust_score'] as num?)?.toDouble() ?? 0.0,
+      location: json['location'] as String?,
+      specialty: json['specialty'] as String?,
+      isPremium: json['is_premium'] as bool? ?? false,
+      isCertified: json['is_certified'] as bool? ?? false,
+      certificationBadge: json['certification_badge'] as String?,
+      createdAt: json['date_joined'] as String?,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mission
+// ─────────────────────────────────────────────────────────────────────────────
+class Mission {
+  const Mission({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.status,
+    required this.budget,
+    required this.clientName,
+    this.clientId,
+    this.providerId,
+    this.createdAt,
+    this.location = '',
+    this.scheduledAt,
+    this.category = 'Services',
+  });
+
+  final String id;
+  final String title;
+  final String description;
+  final MissionStatusType status;
+  final int budget;
+  final String clientName;
+  final String? clientId;
+  final String? providerId;
+  final String? createdAt;
+  final String location;
+  final String? scheduledAt;
+  final String category;
+
+  Mission copyWith({
+    String? id, String? title, String? description,
+    MissionStatusType? status, int? budget, String? clientName,
+    String? clientId, String? providerId, String? createdAt,
+    String? location, String? scheduledAt, String? category,
+  }) => Mission(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    status: status ?? this.status,
+    budget: budget ?? this.budget,
+    clientName: clientName ?? this.clientName,
+    clientId: clientId ?? this.clientId,
+    providerId: providerId ?? this.providerId,
+    createdAt: createdAt ?? this.createdAt,
+    location: location ?? this.location,
+    scheduledAt: scheduledAt ?? this.scheduledAt,
+    category: category ?? this.category,
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wallet & Transactions
+// ─────────────────────────────────────────────────────────────────────────────
+class Wallet {
+  const Wallet({
+    this.balance = 0,
+    this.escrowBalance = 0,
+    this.totalEarned = 0,
+    this.monthlyEarnings = 0,
+    this.monthlyGrowthPercent = 0.0,
+  });
+  final int balance;
+  final int escrowBalance;
+  final int totalEarned;
+  final int monthlyEarnings;
+  final double monthlyGrowthPercent;
+}
+
+class Transaction {
+  const Transaction({
+    required this.id,
+    required this.amount,
+    required this.title,
+    required this.type,
+    required this.createdAt,
+    this.status = 'completed',
+    required this.description,
+    this.counterpartyName,
+  });
+  final String id;
+  final int amount;
+  final String title;
+  final TransactionType type;
+  final String createdAt;
+  final String status;
+  final String description;
+  final String? counterpartyName;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notifications
+// ─────────────────────────────────────────────────────────────────────────────
+class AppNotification {
+  const AppNotification({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.category,
+    this.isRead = false,
+    required this.createdAt,
+    this.actionRoute,
+  });
+  final String id;
+  final String title;
+  final String body;
+  final NotificationCategory category;
+  final bool isRead;
+  final String createdAt;
+  final String? actionRoute;
+
+  AppNotification copyWith({
+    String? id, String? title, String? body,
+    NotificationCategory? category, bool? isRead,
+    String? createdAt, String? actionRoute,
+  }) => AppNotification(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    category: category ?? this.category,
+    isRead: isRead ?? this.isRead,
+    createdAt: createdAt ?? this.createdAt,
+    actionRoute: actionRoute ?? this.actionRoute,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────────────────────────────────────
+class Conversation {
+  const Conversation({
+    required this.id,
+    required this.otherUser,
+    this.lastMessage,
+    this.unreadCount = 0,
+    this.missionTitle,
+  });
+  final String id;
+  final User otherUser;
+  final String? lastMessage;
+  final int unreadCount;
+  final String? missionTitle;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -128,359 +277,107 @@ class AuthTokens {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Mission
-// ─────────────────────────────────────────────────────────────────────────────
-class Mission {
-  const Mission({
-    required this.id,
-    required this.title,
-    this.description,
-    required this.status,
-    required this.budget,
-    this.currency = 'FCFA',
-    required this.category,
-    required this.location,
-    this.scheduledAt,
-    this.completedAt,
-    this.clientId,
-    this.providerId,
-    this.client,
-    this.provider,
-    this.clientRating = 0.0,
-    this.providerRating = 0.0,
-    this.clientReview,
-    this.providerReview,
-    this.createdAt,
-    this.isPremiumPack = false,
-    this.latitude,
-    this.longitude,
-    this.distanceKm,
-  });
-
-  final String id;
-  final String title;
-  final String? description;
-  final MissionStatusType status;
-  final int budget;
-  final String currency;
-  final String category;
-  final String location;
-  final String? scheduledAt;
-  final String? completedAt;
-  final String? clientId;
-  final String? providerId;
-  final User? client;
-  final User? provider;
-  final double clientRating;
-  final double providerRating;
-  final String? clientReview;
-  final String? providerReview;
-  final String? createdAt;
-  final bool isPremiumPack;
-  final double? latitude;
-  final double? longitude;
-  final double? distanceKm;
-
-  Mission copyWith({
-    String? id, String? title, String? description, MissionStatusType? status,
-    int? budget, String? category, String? location, String? scheduledAt,
-  }) => Mission(
-    id: id ?? this.id,
-    title: title ?? this.title,
-    description: description ?? this.description,
-    status: status ?? this.status,
-    budget: budget ?? this.budget,
-    category: category ?? this.category,
-    location: location ?? this.location,
-    scheduledAt: scheduledAt ?? this.scheduledAt,
-    currency: currency,
-    clientRating: clientRating,
-    providerRating: providerRating,
-  );
-
-  factory Mission.fromJson(Map<String, dynamic> json) => Mission(
-    id: json['id'] as String,
-    title: json['title'] as String,
-    description: json['description'] as String?,
-    status: MissionStatusType.values.firstWhere(
-      (s) => s.name == (json['status'] as String?),
-      orElse: () => MissionStatusType.pending,
-    ),
-    budget: json['budget'] as int? ?? 0,
-    category: json['category'] as String? ?? '',
-    location: json['location'] as String? ?? '',
-    scheduledAt: json['scheduled_at'] as String?,
-    createdAt: json['created_at'] as String?,
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Transaction
-// ─────────────────────────────────────────────────────────────────────────────
-class Transaction {
-  const Transaction({
-    required this.id,
-    required this.type,
-    required this.amount,
-    this.currency = 'FCFA',
-    required this.description,
-    this.counterpartyName,
-    this.missionId,
-    required this.createdAt,
-    this.isEscrow = false,
-  });
-
-  final String id;
-  final TransactionType type;
-  final int amount;
-  final String currency;
-  final String description;
-  final String? counterpartyName;
-  final String? missionId;
-  final String createdAt;
-  final bool isEscrow;
-
-  factory Transaction.fromJson(Map<String, dynamic> json) => Transaction(
-    id: json['id'] as String,
-    type: TransactionType.values.firstWhere(
-      (t) => t.name == (json['type'] as String?),
-      orElse: () => TransactionType.credit,
-    ),
-    amount: json['amount'] as int? ?? 0,
-    description: json['description'] as String? ?? '',
-    counterpartyName: json['counterparty_name'] as String?,
-    createdAt: json['created_at'] as String? ?? '',
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ChatMessage
-// ─────────────────────────────────────────────────────────────────────────────
-class ChatMessage {
-  const ChatMessage({
-    required this.id,
-    required this.conversationId,
-    required this.senderId,
-    required this.content,
-    this.type = MessageType.text,
-    this.attachmentUrl,
-    required this.sentAt,
-    this.isRead = false,
-  });
-
-  final String id;
-  final String conversationId;
-  final String senderId;
-  final String content;
-  final MessageType type;
-  final String? attachmentUrl;
-  final String sentAt;
-  final bool isRead;
-
-  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
-    id: json['id'] as String,
-    conversationId: json['conversation_id'] as String? ?? '',
-    senderId: json['sender_id'] as String? ?? '',
-    content: json['content'] as String? ?? '',
-    sentAt: json['sent_at'] as String? ?? '',
-    isRead: json['is_read'] as bool? ?? false,
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Conversation
-// ─────────────────────────────────────────────────────────────────────────────
-class Conversation {
-  const Conversation({
-    required this.id,
-    required this.otherUser,
-    this.lastMessage,
-    this.unreadCount = 0,
-    this.missionId,
-    this.missionTitle,
-  });
-
-  final String id;
-  final User otherUser;
-  final ChatMessage? lastMessage;
-  final int unreadCount;
-  final String? missionId;
-  final String? missionTitle;
-
-  factory Conversation.fromJson(Map<String, dynamic> json) => Conversation(
-    id: json['id'] as String,
-    otherUser: User.fromJson(json['other_user'] as Map<String, dynamic>),
-    unreadCount: json['unread_count'] as int? ?? 0,
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// AppNotification
-// ─────────────────────────────────────────────────────────────────────────────
-class AppNotification {
-  const AppNotification({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.category,
-    this.isRead = false,
-    this.actionRoute,
-    this.actionId,
-    required this.createdAt,
-  });
-
-  final String id;
-  final String title;
-  final String body;
-  final NotificationCategory category;
-  final bool isRead;
-  final String? actionRoute;
-  final String? actionId;
-  final String createdAt;
-
-  AppNotification copyWith({
-    String? id, String? title, String? body, NotificationCategory? category,
-    bool? isRead, String? actionRoute, String? createdAt,
-  }) => AppNotification(
-    id: id ?? this.id,
-    title: title ?? this.title,
-    body: body ?? this.body,
-    category: category ?? this.category,
-    isRead: isRead ?? this.isRead,
-    actionRoute: actionRoute ?? this.actionRoute,
-    createdAt: createdAt ?? this.createdAt,
-  );
-
-  factory AppNotification.fromJson(Map<String, dynamic> json) => AppNotification(
-    id: json['id'] as String,
-    title: json['title'] as String? ?? '',
-    body: json['body'] as String? ?? '',
-    category: NotificationCategory.values.firstWhere(
-      (c) => c.name == (json['category'] as String?),
-      orElse: () => NotificationCategory.system,
-    ),
-    isRead: json['is_read'] as bool? ?? false,
-    actionRoute: json['action_route'] as String?,
-    createdAt: json['created_at'] as String? ?? '',
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Wallet
-// ─────────────────────────────────────────────────────────────────────────────
-class Wallet {
-  const Wallet({
-    required this.id,
-    required this.balance,
-    this.currency = 'FCFA',
-    this.escrowBalance = 0,
-    this.monthlyEarnings = 0,
-    this.monthlyGrowthPercent = 0.0,
-    this.totalEarned = 0,
-  });
-
-  final String id;
-  final int balance;
-  final String currency;
-  final int escrowBalance;
-  final int monthlyEarnings;
-  final double monthlyGrowthPercent;
-  final int totalEarned;
-
-  factory Wallet.fromJson(Map<String, dynamic> json) => Wallet(
-    id: json['id'] as String,
-    balance: json['balance'] as int? ?? 0,
-    escrowBalance: json['escrow_balance'] as int? ?? 0,
-    monthlyEarnings: json['monthly_earnings'] as int? ?? 0,
-    monthlyGrowthPercent: (json['monthly_growth_percent'] as num?)?.toDouble() ?? 0.0,
-    totalEarned: json['total_earned'] as int? ?? 0,
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PaginatedResponse
-// ─────────────────────────────────────────────────────────────────────────────
-class PaginatedResponse<T> {
-  const PaginatedResponse({
-    required this.count,
-    this.next,
-    this.previous,
-    required this.results,
-  });
-
-  final int count;
-  final String? next;
-  final String? previous;
-  final List<T> results;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Mock data factory
+// MOCK DATA
 // ─────────────────────────────────────────────────────────────────────────────
 abstract final class MockData {
-  static User get currentProvider => const User(
-    id: 'user-001', name: 'Moussa Diarra', phone: '+22376543210',
-    role: UserRole.provider, specialty: 'Plombier Expert',
-    location: 'Bamako, ACI 2000', isVerified: true, isPhoneVerified: true,
-    rating: 4.8, reviewCount: 124, completedMissions: 47, trustScore: 87,
-    isCertified: true, certificationBadge: 'Certifié Plomberie',
-    skills: ['Fuite d\'eau', 'Installation', 'Chauffe-eau', 'WC'],
+  static const currentProvider = User(
+    id: 'art-001',
+    name: 'Moussa Diarra',
+    phone: '+223 70 00 00 00',
+    role: UserRole.provider,
+    specialty: 'Plomberie & Sanitaire',
+    rating: 4.8,
+    reviewCount: 24,
+    isVerified: true,
   );
 
-  static User get currentClient => const User(
-    id: 'user-002', name: 'Aminata Coulibaly', phone: '+22377654321',
-    role: UserRole.client, location: 'Bamako, Hippodrome',
-    isVerified: true, isPhoneVerified: true,
+  static const currentClient = User(
+    id: 'cli-001',
+    name: 'Aminata Coulibaly',
+    phone: '+223 60 00 00 00',
+    role: UserRole.client,
   );
 
-  static List<User> get topArtisans => const [
-    User(id: 'art-001', name: 'Moussa Diarra', phone: '+22376543210',
-      specialty: 'Plombier Expert', location: 'ACI 2000', isVerified: true,
-      rating: 4.8, reviewCount: 124, completedMissions: 47, trustScore: 87,
-      skills: ['Fuite d\'eau', 'Installation', 'Chauffe-eau', 'WC']),
-    User(id: 'art-002', name: 'Fatoumata Koné', phone: '+22378765432',
-      specialty: 'Ménagère Pro', location: 'Badalabougou', isVerified: true,
-      rating: 5.0, reviewCount: 89, completedMissions: 63, trustScore: 95,
-      skills: ['Ménage', 'Repassage', 'Cuisine', 'Garde enfant']),
-    User(id: 'art-003', name: 'Ibrahim Koné', phone: '+22379876543',
-      specialty: 'Maître Électricien', location: 'Magnambougou', isVerified: true,
-      rating: 4.9, reviewCount: 67, completedMissions: 38, trustScore: 91,
-      isPremium: true, skills: ['Installation', 'Câblage', 'Tableau électrique']),
-    User(id: 'art-004', name: 'Mariam Traoré', phone: '+22375432109',
-      specialty: 'Couturière', location: 'Lafiabougou', isVerified: true,
-      rating: 4.7, reviewCount: 43, completedMissions: 29, trustScore: 78,
-      skills: ['Couture', 'Broderie', 'Retouche']),
+  static final topArtisans = [
+    currentProvider,
+    const User(
+      id: 'art-002',
+      name: 'Oumar Traoré',
+      phone: '+223 71 11 11 11',
+      role: UserRole.provider,
+      specialty: 'Électricien Bâtiment',
+      rating: 4.5,
+      reviewCount: 18,
+    ),
+    const User(
+      id: 'art-003',
+      name: 'Fanta Keita',
+      phone: '+223 72 22 22 22',
+      role: UserRole.provider,
+      specialty: 'Coiffure & Esthétique',
+      rating: 4.9,
+      reviewCount: 42,
+    ),
   ];
 
-  static List<Mission> get activeMissions => const [
-    Mission(
-      id: 'mis-001', title: 'Réparation fuite salle de bain',
-      description: 'Fuite au niveau du robinet principal.',
-      status: MissionStatusType.inProgress, budget: 25000,
-      category: 'Plomberie', location: 'ACI 2000, Bamako',
-      scheduledAt: '2025-05-14T10:30:00Z',
-    ),
-    Mission(
-      id: 'mis-002', title: 'Installation robinet cuisine',
-      status: MissionStatusType.inEscrow, budget: 18000,
-      category: 'Plomberie', location: 'Hippodrome, Bamako',
+  static final activeMissions = [
+    const Mission(
+      id: 'miss-001',
+      title: 'Fuite d\'eau cuisine',
+      description: 'Réparation d\'un robinet qui fuit.',
+      status: MissionStatusType.inProgress,
+      budget: 15000,
+      clientName: 'Samba Diallo',
+      location: 'ACI 2000',
+      category: 'Plomberie',
       scheduledAt: '2025-05-15T09:00:00Z',
     ),
+    const Mission(
+      id: 'miss-002',
+      title: 'Installation climatiseur',
+      description: 'Pose d\'un split.',
+      status: MissionStatusType.pending,
+      budget: 25000,
+      clientName: 'Fatoumata Koné',
+      location: 'Badalabougou',
+      category: 'Climatisation',
+      scheduledAt: '2025-05-16T14:30:00Z',
+    ),
   ];
 
-  static Wallet get providerWallet => const Wallet(
-    id: 'wal-001', balance: 450000, escrowBalance: 43000,
-    monthlyEarnings: 450000, monthlyGrowthPercent: 12.0, totalEarned: 2340000,
+  static const providerWallet = Wallet(
+    balance: 45000,
+    escrowBalance: 15000,
+    totalEarned: 125000,
+    monthlyEarnings: 35000,
+    monthlyGrowthPercent: 12.5,
   );
 
-  static List<Transaction> get recentTransactions => const [
-    Transaction(id: 'tx-001', type: TransactionType.credit, amount: 25000,
-      description: 'Paiement mission — Fuite', counterpartyName: 'Aminata C.',
-      createdAt: '2025-05-14T14:32:00Z'),
-    Transaction(id: 'tx-002', type: TransactionType.credit, amount: 18000,
-      description: 'Paiement mission — Installation', counterpartyName: 'Modibo T.',
-      createdAt: '2025-05-13T11:15:00Z'),
-    Transaction(id: 'tx-003', type: TransactionType.debit, amount: 50000,
-      description: 'Retrait Orange Money', createdAt: '2025-05-12T09:00:00Z'),
+  static final recentTransactions = [
+    const Transaction(
+      id: 'tx-001',
+      amount: 25000,
+      title: 'Paiement Mission #882',
+      type: TransactionType.credit,
+      createdAt: '2025-05-14T10:30:00Z',
+      description: 'Paiement reçu',
+      counterpartyName: 'Aminata Coulibaly',
+    ),
+    const Transaction(
+      id: 'tx-002',
+      amount: 10000,
+      title: 'Retrait Orange Money',
+      type: TransactionType.debit,
+      createdAt: '2025-05-13T15:20:00Z',
+      description: 'Retrait de fonds',
+    ),
+    const Transaction(
+      id: 'tx-003',
+      amount: 5000,
+      title: 'Frais de service BaaraLink',
+      type: TransactionType.debit,
+      createdAt: '2025-05-12T09:00:00Z',
+      description: 'Frais de service',
+    ),
   ];
 }

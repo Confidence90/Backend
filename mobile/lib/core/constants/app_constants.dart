@@ -6,7 +6,8 @@ abstract final class AppConstants {
   static const String appVersion = '1.0.0';
 
   // ─── API ──────────────────────────────────────────────────────────────────
-  static const String baseUrl = 'https://api.baaralink.ml/api/v1';
+  // Use 10.0.2.2 for Android Emulator to reach localhost
+  static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
 

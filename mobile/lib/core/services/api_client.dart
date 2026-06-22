@@ -64,7 +64,6 @@ class AuthInterceptor extends Interceptor {
   final TokenRepository _tokenRepository;
   final Dio _dio;
   bool _isRefreshing = false;
-  final List<RequestOptions> _retryQueue = [];
 
   @override
   Future<void> onRequest(
@@ -146,6 +145,10 @@ class LoggingInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // ignore: avoid_print
     print('[API ERROR] ${err.response?.statusCode} ${err.message}');
+    if (err.response?.data != null) {
+       // ignore: avoid_print
+       print('[API DATA] ${err.response?.data}');
+    }
     handler.next(err);
   }
 }
@@ -165,7 +168,6 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  // Interceptors — order matters: logging first, auth second
   dio.interceptors.addAll([
     LoggingInterceptor(),
     AuthInterceptor(tokenRepo, dio),
@@ -211,25 +213,61 @@ final class UnknownException extends ApiException {
 // Error handler utility
 // ─────────────────────────────────────────────────────────────────────────────
 ApiException handleDioError(DioException error) {
+  if (error.type == DioExceptionType.badResponse) {
+    final response = error.response;
+    final statusCode = response?.statusCode;
+    final dynamic data = response?.data;
+
+    String extractMessage(dynamic data, String fallback) {
+      if (data is Map) {
+        return data['detail']?.toString() ?? 
+               data['message']?.toString() ?? 
+               data['error']?.toString() ?? 
+               fallback;
+      }
+      if (data is String && data.isNotEmpty && !data.contains('<!DOCTYPE')) {
+        return data;
+      }
+      return fallback;
+    }
+
+    switch (statusCode) {
+      case 401:
+        return const UnauthorizedException();
+      case 404:
+        return NotFoundException(extractMessage(data, 'Ressource introuvable.'));
+      case 400:
+      case 422:
+        Map<String, List<String>>? fieldErrors;
+        if (data is Map) {
+          fieldErrors = {};
+          data.forEach((key, value) {
+            if (value is List) {
+              fieldErrors![key.toString()] = value.map((e) => e.toString()).toList();
+            } else if (value != null) {
+              fieldErrors![key.toString()] = [value.toString()];
+            }
+          });
+        }
+        return ValidationException(
+          extractMessage(data, 'Données invalides.'),
+          fieldErrors: fieldErrors,
+        );
+      case 500:
+      case 502:
+      case 503:
+        return const ServerException();
+      default:
+        return UnknownException();
+    }
+  }
+
   return switch (error.type) {
     DioExceptionType.connectionTimeout ||
     DioExceptionType.receiveTimeout ||
     DioExceptionType.sendTimeout ||
     DioExceptionType.connectionError =>
       const NetworkException(),
-    DioExceptionType.badResponse => switch (error.response?.statusCode) {
-        401 => const UnauthorizedException(),
-        404 => NotFoundException(
-            error.response?.data?['detail'] ?? 'Ressource introuvable.',
-          ),
-        422 || 400 => ValidationException(
-            error.response?.data?['detail'] ?? 'Données invalides.',
-            fieldErrors: (error.response?.data as Map<String, dynamic>?)
-                ?.map((k, v) => MapEntry(k, List<String>.from(v as List))),
-          ),
-        500 || 502 || 503 => const ServerException(),
-        _ => UnknownException(),
-      },
     _ => const UnknownException(),
   };
 }

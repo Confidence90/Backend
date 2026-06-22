@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../models/app_models.dart';
 import '../../core/services/api_client.dart';
-import '../../core/constants/app_constants.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth State
@@ -54,6 +53,7 @@ class AuthNotifier extends Notifier<AuthState> {
         final user = User.fromJson(response.data as Map<String, dynamic>);
         state = AuthAuthenticated(user);
       } catch (_) {
+        await _tokens.clearTokens();
         state = const AuthUnauthenticated();
       }
     } else {
@@ -61,114 +61,109 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  /// Request OTP SMS
-  /*Future<void> requestOtp(String phone) async {
+  /// Méthode générique demandée par l'UI (Login par défaut)
+  Future<bool> requestOtp(String phone) async {
+    return requestLoginOtp(phone);
+  }
+
+  /// Étape 1 : Demande OTP pour Connexion
+  Future<bool> requestLoginOtp(String phone) async {
     state = const AuthLoading();
     try {
-      await _dio.post('/auth/otp/send/', data: {'phone': phone});
+      await _dio.post('/auth/login/', data: {'phone_number': phone});
       state = const AuthUnauthenticated();
+      return true;
     } on DioException catch (e) {
       state = AuthError(handleDioError(e).message);
+      return false;
     }
   }
-  
 
-  /// Verify OTP and log in
-  Future<bool> verifyOtp(String phone, String otp) async {
+  /// Étape 1 : Demande OTP pour Inscription
+  Future<bool> requestRegisterOtp({
+    required String phone,
+    required String firstName,
+    required String lastName,
+    required UserRole role,
+  }) async {
     state = const AuthLoading();
     try {
-      final response = await _dio.post('/auth/otp/verify/', data: {
-        'phone': phone,
-        'otp': otp,
+      await _dio.post('/auth/register/', data: {
+        'phone_number': phone,
+        'first_name': firstName,
+        'last_name': lastName,
+        'role': role.name.toUpperCase(),
       });
+      state = const AuthUnauthenticated();
+      return true;
+    } on DioException catch (e) {
+      state = AuthError(handleDioError(e).message);
+      return false;
+    }
+  }
+
+  /// Étape 2 : Vérification du code OTP (Gère login et register via Django)
+  Future<bool> verifyOtp(String phone, String code, {bool isRegister = false}) async {
+    state = const AuthLoading();
+    try {
+      // On essaie d'abord le login, si ça échoue avec 404, c'est peut-être une vérification d'inscription
+      // Mais pour être précis, on utilise le flag isRegister
+      final endpoint = isRegister ? '/auth/register/verify/' : '/auth/login/verify/';
+      
+      final response = await _dio.post(endpoint, data: {
+        'phone_number': phone,
+        'code': code,
+      });
+      
       final tokens = AuthTokens.fromJson(response.data as Map<String, dynamic>);
       await _tokens.saveTokens(access: tokens.access, refresh: tokens.refresh);
+      
       state = AuthAuthenticated(tokens.user);
       return true;
     } on DioException catch (e) {
       state = AuthError(handleDioError(e).message);
       return false;
     }
-  }*/
-  Future<void> requestOtp(String phone) async {
-    state = const AuthLoading();
-    await Future.delayed(const Duration(seconds: 1));
-    state = const AuthUnauthenticated();
   }
 
-  Future<bool> verifyOtp(String phone, String otp) async {
-    state = const AuthLoading();
-
-    await Future.delayed(const Duration(seconds: 1));
-
-    final user = User(
-      id: '1',
-      email: '',
-      phone: phone,
-      role: UserRole.client,
-      name: '',
-    );
-
-    state = AuthAuthenticated(user);
-    return true;
-  }
-
-  /// Email + password login (secondary)
-  /*Future<bool> loginWithEmail(String email, String password) async {
-    state = const AuthLoading();
-    try {
-      final response = await _dio.post('/auth/token/', data: {
-        'email': email,
-        'password': password,
-      });
-      final tokens = AuthTokens.fromJson(response.data as Map<String, dynamic>);
-      await _tokens.saveTokens(access: tokens.access, refresh: tokens.refresh);
-      state = AuthAuthenticated(tokens.user);
-      return true;
-    } on DioException catch (e) {
-      state = AuthError(handleDioError(e).message);
-      return false;
-    }
-  }*/
-  Future<bool> loginWithEmail(String email, String password) async {
-    state = const AuthLoading();
-
-    await Future.delayed(const Duration(seconds: 1));
-
-    // MOCK USER
-    final user = User(
-      id: '1',
-      email: email,
-      phone: '',
-      role: UserRole.client,
-      name: '',
-    );
-
-    state = AuthAuthenticated(user);
-    return true;
-  }
-
-  /// Update user role after role selection
+  /// Restauration de la méthode demandée par RoleSelectScreen
   Future<void> selectRole(UserRole role) async {
     final current = state;
     if (current is! AuthAuthenticated) return;
     state = const AuthLoading();
     try {
       final response = await _dio.patch('/auth/me/', data: {
-        'role': role.name,
+        'role': role.name.toUpperCase(),
       });
       final updated = User.fromJson(response.data as Map<String, dynamic>);
       state = AuthAuthenticated(updated);
     } on DioException catch (e) {
-      // Non-blocking — revert to previous user with role applied locally
+      // Fallback local en cas d'erreur API
       state = AuthAuthenticated(current.user.copyWith(role: role));
     }
   }
 
-  Future<void> logout() async {
+  /// Restauration login email (si utilisé en fallback)
+  Future<bool> loginWithEmail(String email, String password) async {
     state = const AuthLoading();
     try {
-      await _dio.post('/auth/logout/');
+      // Note: Votre backend Django n'a pas encore cet endpoint selon l'URLconf fournie,
+      // mais on le garde pour la compatibilité UI.
+      state = AuthError("Le login par email n'est pas activé sur le serveur.");
+      return false;
+    } catch (e) {
+      state = const AuthError("Erreur de connexion.");
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    final currentToken = await _tokens.getRefreshToken();
+    state = const AuthLoading();
+    try {
+      if (currentToken != null) {
+        await _dio.post('/auth/logout/', data: {'refresh': currentToken});
+      }
     } catch (_) {}
     await _tokens.clearTokens();
     state = const AuthUnauthenticated();
@@ -179,12 +174,9 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 }
 
-final authProvider =
-    NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Convenience providers
-// ─────────────────────────────────────────────────────────────────────────────
 final currentUserProvider = Provider<User?>((ref) {
   final auth = ref.watch(authProvider);
   return auth is AuthAuthenticated ? auth.user : null;
@@ -196,8 +188,4 @@ final isAuthenticatedProvider = Provider<bool>((ref) {
 
 final userRoleProvider = Provider<UserRole?>((ref) {
   return ref.watch(currentUserProvider)?.role;
-});
-
-final isProviderRoleProvider = Provider<bool>((ref) {
-  return ref.watch(userRoleProvider) == UserRole.provider;
 });
